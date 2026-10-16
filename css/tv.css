@@ -6,7 +6,7 @@ body {
   font-family: "Press Start 2P", monospace;
 }
 #stage { position: fixed; inset: 0; display: grid; place-items: center; }
-#tv { position: relative; width: 1170px; padding-top: 120px; transform-origin: center center; }
+#tv { position: absolute; left: 50%; top: 50%; width: 1170px; padding-top: 120px; transform: translate(-50%, -50%); transform-origin: center center; }
 
 /* корпус */
 .body {

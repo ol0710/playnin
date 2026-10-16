@@ -15,8 +15,8 @@ const Main = {
   // масштаб ТВ под размер окна
   const tv = document.getElementById('tv');
   function fit() {
-    const s = Math.min(innerWidth / (tv.offsetWidth + 30), innerHeight / (tv.offsetHeight + 30), 1.5);
-    tv.style.transform = 'scale(' + s + ')';
+    const s = Math.min(innerWidth / (tv.offsetWidth + 24), innerHeight / (tv.offsetHeight + 24), 1.5);
+    tv.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
   }
   addEventListener('resize', fit); fit();
 
