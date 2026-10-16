@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Turtle Ninja Quest</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Ретро-игра про черепашек-ниндзя прямо в браузере: 8-бит, 40 уровней, экран старого телевизора.">
+<link rel="stylesheet" href="css/font.css">
+<link rel="stylesheet" href="css/tv.css">
+</head>
+<body>
+<div id="stage">
+  <div id="tv">
+    <div class="antenna"><span class="ant a1"></span><span class="ant a2"></span><span class="ant-base"></span></div>
+    <div class="body">
+      <div class="bezel">
+        <div class="screen">
+          <canvas id="game" width="900" height="600" tabindex="0"></canvas>
+          <div class="fx scan"></div>
+          <div class="fx vig"></div>
+          <div class="fx glare"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="brand">TURTLE<br>VISION</div>
+        <div class="grill"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <button class="knob" id="knobSound" title="Sound / Звук (M)"><span></span></button>
+        <div class="knob dec"><span></span></div>
+        <div class="led"></div>
+      </div>
+    </div>
+    <div class="legs"><span></span><span></span></div>
+  </div>
+  <p id="mobile-note">Эта игра для компьютера с клавиатурой · This game needs a keyboard</p>
+</div>
+<noscript><p style="color:#fff;text-align:center">JavaScript required / Нужен JavaScript</p></noscript>
+<script defer src="js/i18n.js"></script>
+<script defer src="js/audio.js"></script>
+<script defer src="js/input.js"></script>
+<script defer src="js/sprites.js"></script>
+<script defer src="js/levels.js"></script>
+<script defer src="js/game.js"></script>
+<script defer src="js/ui.js"></script>
+<script defer src="js/main.js"></script>
+</body>
+</html>

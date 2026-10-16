@@ -1,0 +1,75 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: #14110f; }
+body {
+  background:
+    radial-gradient(ellipse at 50% 30%, #3a2f27 0%, #1b1613 60%, #0d0b09 100%);
+  font-family: "Press Start 2P", monospace;
+}
+#stage { position: fixed; inset: 0; display: grid; place-items: center; }
+#tv { position: relative; width: 1170px; padding-top: 120px; transform-origin: center center; }
+
+/* корпус */
+.body {
+  display: flex; gap: 22px; padding: 34px 30px 34px 34px;
+  background: linear-gradient(160deg, #8a5a32 0%, #6b4223 45%, #4a2d17 100%);
+  border-radius: 34px;
+  box-shadow: inset 0 3px 0 rgba(255,220,170,.35), inset 0 -6px 0 rgba(0,0,0,.35), 0 30px 60px rgba(0,0,0,.7);
+  position: relative;
+}
+.body::before { /* текстура дерева */
+  content: ""; position: absolute; inset: 0; border-radius: 34px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 2px, transparent 2px 9px);
+}
+.bezel {
+  padding: 16px; border-radius: 46px / 40px; background: #1a1a1c;
+  box-shadow: inset 0 0 0 4px #0b0b0c, inset 0 6px 14px #000, 0 2px 0 rgba(255,255,255,.12);
+}
+.screen {
+  position: relative; width: 900px; height: 600px; overflow: hidden; background: #000;
+  border-radius: 7% / 9%;
+  box-shadow: inset 0 0 60px rgba(0,0,0,.8), 0 0 28px rgba(120,200,255,.15);
+  animation: flicker 4s infinite;
+}
+#game {
+  display: block; width: 900px; height: 600px; image-rendering: pixelated;
+  filter: contrast(1.12) saturate(1.18) brightness(1.05);
+  outline: none; cursor: default;
+}
+.fx { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.scan { background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.28) 2px 3px); mix-blend-mode: multiply; }
+.vig { background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+.glare { background: linear-gradient(125deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 28%); }
+@keyframes flicker {
+  0%, 100% { opacity: 1; } 47% { opacity: .985; } 48% { opacity: .96; } 50% { opacity: 1; } 83% { opacity: .98; }
+}
+
+/* боковая панель */
+.panel {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 8px 0;
+  background: linear-gradient(180deg, #2b2623, #1d1917); border-radius: 18px;
+  box-shadow: inset 0 0 0 3px #12100f, inset 0 3px 8px #000;
+}
+.brand { color: #e8c98a; font-size: 10px; line-height: 1.6; text-align: center; margin-top: 16px; letter-spacing: 1px; text-shadow: 0 1px 0 #000; }
+.grill { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 10px; width: 78px; }
+.grill i { display: block; height: 6px; border-radius: 3px; background: #0b0a09; box-shadow: 0 1px 0 rgba(255,255,255,.1); }
+.knob {
+  width: 70px; height: 70px; border-radius: 50%; border: 0; cursor: pointer; position: relative;
+  background: radial-gradient(circle at 35% 30%, #d9d2c6, #7d766b 70%, #4d483f);
+  box-shadow: 0 5px 0 #0c0b0a, 0 8px 14px rgba(0,0,0,.6), inset 0 -3px 5px rgba(0,0,0,.4);
+}
+.knob span { position: absolute; left: 50%; top: 7px; width: 6px; height: 22px; margin-left: -3px; background: #1b1814; border-radius: 3px; transform-origin: 50% 28px; transform: rotate(35deg); }
+.knob:active { transform: translateY(2px); }
+.knob.dec { cursor: default; } .knob.dec span { transform: rotate(-50deg); }
+.led { width: 12px; height: 12px; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 10px #ff3b30, 0 0 3px #fff inset; margin-top: auto; margin-bottom: 14px; }
+
+/* антенна и ножки */
+.antenna { position: absolute; top: 0; left: 0; right: 0; height: 80px; pointer-events: none; }
+.ant { position: absolute; bottom: 26px; left: 50%; width: 5px; height: 110px; background: linear-gradient(#ddd, #888); border-radius: 3px; transform-origin: bottom center; }
+.a1 { transform: rotate(-32deg); } .a2 { transform: rotate(28deg); }
+.ant::after { content: ""; position: absolute; top: -4px; left: -3px; width: 11px; height: 11px; border-radius: 50%; background: #ccc; }
+.ant-base { position: absolute; bottom: 20px; left: 50%; width: 90px; height: 18px; margin-left: -45px; background: #2a2522; border-radius: 40px 40px 0 0; }
+.legs { display: flex; justify-content: space-between; padding: 0 90px; height: 26px; }
+.legs span { width: 70px; height: 26px; background: linear-gradient(#3a2412, #1b1009); border-radius: 0 0 12px 12px; }
+
+#mobile-note { display: none; position: fixed; left: 0; right: 0; bottom: 8px; text-align: center; color: #e8c98a; font-size: 9px; line-height: 1.6; padding: 0 12px; }
+@media (pointer: coarse) { #mobile-note { display: block; } }
