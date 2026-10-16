@@ -14,11 +14,13 @@ const Main = {
 
   // масштаб ТВ под размер окна
   const tv = document.getElementById('tv');
+  const touch = document.documentElement.classList.contains('touch');
   function fit() {
-    const s = Math.min(innerWidth / (tv.offsetWidth + 24), innerHeight / (tv.offsetHeight + 24), 1.5);
+    const m = touch ? 0 : 24;
+    const s = Math.min(innerWidth / (tv.offsetWidth + m), innerHeight / (tv.offsetHeight + m), 1.5);
     tv.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
   }
-  addEventListener('resize', fit); fit();
+  addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 200)); fit();
 
   // ---- ручки ТВ: верхняя — канал (уровень), нижняя — громкость ----
   const knobCh = document.getElementById('knobCh'), knobVol = document.getElementById('knobVol');
@@ -29,8 +31,8 @@ const Main = {
     const ch = State.last || 1;
     knobCh.firstElementChild.style.transform = 'rotate(' + Math.round(-135 + (ch - 1) / 39 * 270) + 'deg)';
     knobVol.firstElementChild.style.transform = 'rotate(' + Math.round(-135 + Sound.vol / 10 * 270) + 'deg)';
-    lblCh.textContent = 'CH ' + pad2(ch);
-    lblVol.textContent = 'VOL ' + Sound.vol;
+    lblCh.textContent = '- CH ' + pad2(ch) + ' +';
+    lblVol.textContent = '- VOL ' + Sound.vol + ' +';
   }
   function volume(d) {
     Sound.init(); Sound.setVol(Sound.vol + d); Sound.sfx('select');
@@ -47,7 +49,7 @@ const Main = {
     turnKnobs();
   }
   const clickKnob = (el, fn) => {
-    el.addEventListener('click', e => { fn(1); canvas.focus(); });
+    el.addEventListener('click', e => { const r = el.getBoundingClientRect(); fn(e.detail && e.clientX < r.left + r.width / 2 ? -1 : 1); canvas.focus(); });
     el.addEventListener('contextmenu', e => { e.preventDefault(); fn(-1); });
     el.addEventListener('wheel', e => { e.preventDefault(); fn(e.deltaY < 0 ? 1 : -1); }, { passive: false });
   };
@@ -60,6 +62,35 @@ const Main = {
     else if (e.code === 'Minus' || e.code === 'NumpadSubtract') { e.preventDefault(); volume(-1); }
   });
   turnKnobs();
+
+  // ---- сенсорные кнопки ----
+  if (touch) {
+    const tap = {
+      pause: () => { Input.press('Escape'); setTimeout(() => Input.release('Escape'), 60); },
+      back: () => { Input.press('Escape'); setTimeout(() => Input.release('Escape'), 60); },
+      'ch+': () => channel(1), 'ch-': () => channel(-1), 'vol+': () => volume(1), 'vol-': () => volume(-1),
+      fs: () => { const d = document, el = d.documentElement; try { (d.fullscreenElement ? d.exitFullscreen() : (el.requestFullscreen || el.webkitRequestFullscreen).call(el)); } catch (e) {} },
+    };
+    for (const btn of document.querySelectorAll('#touch button')) {
+      const k = btn.dataset.k, a = btn.dataset.tap;
+      if (k) {
+        const up = e => { Input.release(k); btn.classList.remove('on'); };
+        btn.addEventListener('pointerdown', e => { e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch (_) {} Input.press(k); btn.classList.add('on'); });
+        for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) btn.addEventListener(ev, up);
+      } else if (a) {
+        btn.addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); tap[a](); });
+      }
+      btn.addEventListener('contextmenu', e => e.preventDefault());
+    }
+    addEventListener('blur', () => document.querySelectorAll('#touch button.on').forEach(b => b.classList.remove('on')));
+  }
+  let sceneCls = '';
+  function syncScene() {
+    const s = Main.scene, c = s instanceof Play ? 'scene-play' : s instanceof Title ? 'scene-title' : 'scene-menu';
+    if (c !== sceneCls) { document.body.classList.remove('scene-play', 'scene-title', 'scene-menu'); document.body.classList.add(c); sceneCls = c; }
+    if (touch && c === 'scene-play' && s.mode === 'play' && innerHeight > innerWidth) s.mode = 'pause';
+  }
+
   function drawOsd() {
     if (osd.t <= 0) return;
     osd.t--; const c = ctx, x = 292;
@@ -88,7 +119,7 @@ const Main = {
     ctx.globalAlpha = 1;
     Main.scene.draw();
     if (knobSync !== State.last) { knobSync = State.last; turnKnobs(); }
-    drawOsd();
+    drawOsd(); syncScene();
     UI.endFrame();
     requestAnimationFrame(frame);
   }

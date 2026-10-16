@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <title>Turtle Ninja Quest</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14110f">
+<script>
+  // сенсорный режим: телефон/планшет или ?touch=1
+  try { if (matchMedia('(pointer: coarse)').matches || /[?&]touch=1/.test(location.search)) document.documentElement.classList.add('touch'); } catch (e) {}
+</script>
 <meta name="description" content="Ретро-игра про черепашек-ниндзя прямо в браузере: 8-бит, 40 уровней, экран старого телевизора.">
 <link rel="stylesheet" href="css/font.css">
 <link rel="stylesheet" href="css/tv.css">
@@ -25,11 +32,11 @@
         <div class="brand">TURTLE<br>VISION</div>
         <div class="grill"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="kwrap">
-          <button class="knob" id="knobCh" title="Канал / Channel: клик, колесо, [ ]"><span></span></button>
+          <button class="knob" id="knobCh" title="Канал / Channel: клик слева — назад, справа — вперёд; колесо; [ ]"><span></span></button>
           <div class="klabel" id="lblCh">CH</div>
         </div>
         <div class="kwrap">
-          <button class="knob" id="knobVol" title="Громкость / Volume: клик, колесо, - +"><span></span></button>
+          <button class="knob" id="knobVol" title="Громкость / Volume: клик слева — тише, справа — громче; колесо; - +"><span></span></button>
           <div class="klabel" id="lblVol">VOL</div>
         </div>
         <div class="led"></div>
@@ -37,8 +44,29 @@
     </div>
     <div class="legs"><span></span><span></span></div>
   </div>
-  <p id="mobile-note">Эта игра для компьютера с клавиатурой · This game needs a keyboard</p>
 </div>
+<div id="touch">
+  <div class="tl game">
+    <button data-k="ArrowLeft" aria-label="Left">&#9664;</button>
+    <button data-k="ArrowRight" aria-label="Right">&#9654;</button>
+  </div>
+  <div class="tr game">
+    <button class="b-jump" data-k="Space" aria-label="Jump">&#9650;</button>
+    <button class="b-atk" data-k="KeyJ" aria-label="Sword">&#9876;</button>
+    <button class="b-star" data-k="KeyL" aria-label="Star">&#10022;</button>
+    <button class="b-shield" data-k="KeyK" aria-label="Shield">&#128737;</button>
+  </div>
+  <div class="tm game">
+    <button class="sm" data-tap="pause" aria-label="Pause">&#10074;&#10074;</button>
+    <button class="sm" data-tap="ch-" aria-label="Level -">CH-</button>
+    <button class="sm" data-tap="ch+" aria-label="Level +">CH+</button>
+    <button class="sm" data-tap="vol-" aria-label="Volume -">V-</button>
+    <button class="sm" data-tap="vol+" aria-label="Volume +">V+</button>
+    <button class="sm" data-tap="fs" aria-label="Fullscreen">&#9974;</button>
+  </div>
+  <button class="sm tb menu" data-tap="back" aria-label="Back">&#10005;</button>
+</div>
+<div id="rotate"><div>&#10227;<br><br>Поверните телефон горизонтально<br><br>Rotate your phone</div></div>
 <noscript><p style="color:#fff;text-align:center">JavaScript required / Нужен JavaScript</p></noscript>
 <script defer src="js/i18n.js"></script>
 <script defer src="js/audio.js"></script>

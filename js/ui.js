@@ -73,8 +73,9 @@ class Title extends Scene {
     Gfx.text(t('title2'), 150, 42 + bob, { size: 16, align: 'center', color: '#ffd23f', shadow: '#5a3a00' });
     for (let i = 0; i < 4; i++) {
       const set = Sprites.turtles[i], f = Math.floor(this.tk / 8 + i) % 2;
-      Gfx.sprite((Math.floor(this.tk / 8) + i) % 4 === 0 ? set.jump[0] : set[f ? 'run0' : 'run1'][0], 60 + i * 48, 72 + (i % 2) * 2, 2);
+      Gfx.sprite((Math.floor(this.tk / 8) + i) % 4 === 0 ? set.jump[0] : set[f ? 'run0' : 'run1'][0], 46 + i * 56, 62 + (i % 2) * 2, 2);
     }
+    Gfx.sprite(Sprites.splinter[0], 14, 118, 2);
     UI.button('play', t('play'), 80, 112, 140, 17, () => Main.go(new Select()));
     UI.button('lang', t('lang', I18N.lang.toUpperCase()), 80, 133, 140, 17, () => I18N.next());
     UI.button('snd', t('sound', t(Sound.muted ? 'off' : 'on')), 80, 154, 140, 17, () => Sound.toggle());
@@ -94,7 +95,7 @@ class Select extends Scene {
       const x = 14 + i * 71, sel = UI.sel === 'h' + i;
       UI.button('h' + i, '', x, 30, 64, 78, () => { State.hero = i; Main.go(new MapScene()); }, { arrow: false });
       const set = Sprites.turtles[i], f = Math.floor(this.tk / 8) % 2;
-      Gfx.sprite(sel ? set[f ? 'run0' : 'run1'][0] : set.idle[0], x + 8, 38, 3);
+      Gfx.sprite(sel ? set[f ? 'run0' : 'run1'][0] : set.idle[0], x + 12, 40, 2);
       Gfx.text(t('hero' + i), x + 32, 92, { align: 'center', color: sel ? '#ffd23f' : '#fff' });
     }
     ['c1', 'c2', 'c3', 'c4', 'c5'].forEach((k, i) => Gfx.text(t(k), 150, 122 + i * 11, { align: 'center', color: k === 'c5' ? '#9ad0ff' : '#c8c8ff' }));
@@ -229,7 +230,7 @@ class Win extends Scene {
     MenuBg.draw(this.tk);
     Gfx.text(t('win'), 150, 24, { size: 16, align: 'center', color: '#ffd23f', shadow: '#5a3a00' });
     Gfx.text(t('win_text'), 150, 52, { align: 'center', color: '#52e05a' });
-    for (let i = 0; i < 4; i++) Gfx.sprite(Sprites.turtles[i][(Math.floor(this.tk / 6) % 2) ? 'jump' : 'idle'][0], 60 + i * 48, 80 + Math.round(Math.abs(Math.sin(this.tk / 10 + i)) * -8), 2);
+    for (let i = 0; i < 4; i++) Gfx.sprite(Sprites.turtles[i][(Math.floor(this.tk / 6) % 2) ? 'jump' : 'idle'][0], 46 + i * 56, 80 + Math.round(Math.abs(Math.sin(this.tk / 10 + i)) * -8), 2);
     UI.button('map', t('map'), 80, 140, 140, 18, () => Main.go(new MapScene()));
   }
 }

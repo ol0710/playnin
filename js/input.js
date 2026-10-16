@@ -24,12 +24,15 @@ const Input = (() => {
       mouse.x = (e.clientX - r.left) * (300 / r.width);
       mouse.y = (e.clientY - r.top) * (200 / r.height);
     };
-    canvas.addEventListener('mousemove', e => { pos(e); mouse.moved = true; });
-    canvas.addEventListener('mousedown', e => { pos(e); mouse.click = true; Sound.init(); canvas.focus(); });
+    canvas.addEventListener('pointermove', e => { pos(e); mouse.moved = true; });
+    canvas.addEventListener('pointerdown', e => { pos(e); mouse.moved = true; mouse.click = true; Sound.init(); canvas.focus(); });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
   }
 
   return {
     mouse, bindCanvas,
+    press(code) { if (!down.has(code)) edge.add(code); down.add(code); Sound.init(); },
+    release(code) { down.delete(code); },
     isDown: a => MAP[a].some(k => down.has(k)),
     pressed: a => MAP[a].some(k => edge.has(k)),
     endTick() { edge.clear(); mouse.click = false; mouse.moved = false; },

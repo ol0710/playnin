@@ -44,7 +44,8 @@ const Levels = (() => {
       if (r() < 0.22) {
         const len = ri(3, 5);
         let mt = ROWS, pitNear = false; for (let i = -3; i < len + 4; i++) { if (top[cx + i] === ROWS) pitNear = true; if (i >= 0 && i < len) mt = Math.min(mt, top[cx + i]); }
-        if (mt < ROWS && !pitNear) {
+        let flatUnder = true; for (let i = -2; i < len + 3; i++) if (top[cx + i] !== top[cx]) flatUnder = false;
+        if (mt < ROWS && !pitNear && flatUnder) {
           const p = mt - 3;
           if (p >= 2) {
             let ok = true;

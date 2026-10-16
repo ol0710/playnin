@@ -24,41 +24,55 @@ const Sprites = (() => {
   }
   const pair = c => [c, flip(c)]; // [вправо, влево]
 
-  // ---------- Черепашки ----------
-  const BODY = [
-    '................',
-    '.....bbbbbbbb...',
-    '....bbbbbbbbbb..',
-    '....bbwwbbwwbb..',
-    '....bbwkbbwkbb..',
-    '....gggggggggg..',
-    '.....gggggggg...',
-    '...dggggggggggd.',
-    '...dgyyyyyyyygd.',
-    '...dgyyyyyyyygd.',
-    '...dgyyyyyyyygd.',
-    '....oooooooooo..',
+  // ---------- Черепашки (20x24): панцирь, пластрон, маска с хвостиками, пояс, наколенники ----------
+  const mir = h => h + [...h].reverse().join('');
+  const T_HALF = [
+    '.......ooo', '.....ooggg', '....oggggg', '...obbbbbb', '...obwpbbb', '...obbbbbb', '...ogggggg', '...oggggkk', '....oggggg', '..sssogggg',
+    '.sgggoyyyy', '.gggdoyYyY', '.nnndoyyyy', '.gggdoyYyY', '.ggg.otttt', '..gg.otthh', '.....otttt', '.....oyyyy', '.....ogggg',
   ];
-  const LEGS = {
-    idle: ['.....ggg..ggg...', '.....ggg..ggg...', '.....ggg..ggg...', '....kkkk..kkkk..'],
-    run0: ['....ggg....ggg..', '...ggg......ggg.', '...ggg.......gg.', '..kkkk......kkk.'],
-    run1: ['.....gg..ggg....', '.....gg...ggg...', '....ggg....ggg..', '....kkk....kkkk.'],
-    jump: ['....ggg....ggg..', '.....ggg..ggg...', '.....kkk..kkk...', '................'],
+  const T_LEGS = {
+    idle: ['....ogggg..ggggo....', '....onnnn..nnnno....', '....ogggg..ggggo....', '...oggggg..gggggo...', '...oooooo..oooooo...'],
+    run0: ['...ogggg....ggggo...', '..onnnn......nnnno..', '.oggggg.......ggggo.', '.ogggggg......gggggo', '.oooooooo.....oooooo'],
+    run1: ['.....oggggggggo.....', '.....onnnnnnnno.....', '.....oggggggggo.....', '....ogggggggggo.....', '....ooooooooooo.....'],
   };
+  T_LEGS.jump = T_LEGS.run0;
+  const shade = (hex, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.substr(i, 2), 16) * f).toString(16).padStart(2, '0')).join('');
   const BANDANAS = ['#2f6bff', '#ff3b3b', '#a64cff', '#ff9a1f'];
   const turtles = BANDANAS.map(b => {
-    const pal = { g: '#4cc24a', d: '#2c8a3a', y: '#d9ec7a', b, w: '#fff', k: '#111', o: '#8b5a2b' };
+    const pal = { o: '#0e2a10', g: '#5fbf3a', d: '#3a9a2c', s: '#8a5a2b', y: '#f2e08a', Y: '#c9ae4a', b, B: shade(b, 0.65), n: b, w: '#fff', p: '#111', k: '#111', t: '#7a4a1e', h: '#ffd23f' };
+    const top = T_HALF.map(mir).map((r, i) => {
+      r = r.split('');
+      if (i === 4) { r[17] = r[18] = r[19] = 'b'; }
+      if (i === 5) { r[17] = 'b'; r[18] = 'B'; }
+      if (i === 6) { r[18] = 'B'; }
+      return r.join('');
+    });
     const o = {};
-    for (const k in LEGS) o[k] = pair(make([...BODY, ...LEGS[k]], pal, true));
+    for (const k in T_LEGS) o[k] = pair(make([...top, ...T_LEGS[k]], pal));
     return o;
   });
 
-  // ---------- Враги ----------
-  const WALK_PAL = { p: '#5a4a96', q: '#3a2f6a', r: '#d12b2b', w: '#fff', k: '#111' };
-  const WALK_TOP = [
-    '................', '.....pppppppp...', '....pppppppppp..', '....rrrrrrrrrr..', '....pwkpppwkpp..', '....pppppppppp..',
-    '.....pppppppp...', '...ppqqqqqqqqpp.', '..pppqqqqqqqqppp', '..pppqqqqqqqqppp', '...ppqqqqqqqqpp.', '....rrrrrrrrrr..',
+  // Мастер-крыса (наставник): серый мех, коричневое кимоно, длинный хвост
+  const SP_HALF = [
+    '..fff.....', '..fnf.ffff', '...fffffff', '...ffeefff', '....ffffff', '....ffffnn', '.....ffFFw', '..rrrRrrrr', '.rrrRRrrrr', 'rrrrRrrrrr',
+    'rrffRrrrrr', 'RRRRRRoooo', '.rrrrRrrrr', '.rrrrRrrrr', '..rrrRrrrr', '..rrrRrrrr', '..rrrRrrrr', '...rrRrrrr', '...rrrRrrr', '...RRRRRRR',
+    '....ffff..', '....ffff..', '...fFfFf..', '..........',
   ];
+  const splinter = (() => {
+    const rows = SP_HALF.map(mir).map(r => r.split(''));
+    [[17, 18], [18, 19], [19, 19], [20, 18], [21, 17], [21, 16]].forEach(([y, x]) => { rows[y][x] = 't'; });
+    return pair(make(rows.map(r => r.join('')), { f: '#9aa0a8', F: '#6d727a', n: '#e8a0a0', e: '#111', w: '#fff', r: '#8a4a22', R: '#5a2e14', o: '#c9a050', t: '#e8b0a8' }));
+  })();
+
+  // ---------- Враги ----------
+  const WALK_PAL = { p: '#5a3aa0', q: '#33205f', r: '#d12b2b', S: '#e0b080', w: '#fff', k: '#111' };
+  const NJ = ['....pppp', '...ppppp', '...rrrrr', '...pSwkS', '...ppppp', '....pppp', '..pppqqq', '.ppqqqqq', '.pppqqqq', '..pqrrrr', '...pqqqq', '....pppp'];
+  const WALK_TOP = NJ.map(mir).map((r, i) => {
+    r = r.split('');
+    if (i === 2) { r[13] = r[14] = r[15] = 'r'; }
+    if (i === 3) { r[14] = r[15] = 'r'; }
+    return r.join('');
+  });
   const walker = [
     ['.....ppp..ppp...', '.....ppp..ppp...', '.....ppp..ppp...', '....kkkk..kkkk..'],
     ['....ppp....ppp..', '...ppp......ppp.', '...ppp......ppp.', '..kkkk......kkkk'],
@@ -121,7 +135,7 @@ const Sprites = (() => {
   const walkers = [
     walker,
     null, null,
-    ninja({ p: '#8a1f1f', q: '#3a0f0f', r: '#111', w: '#fff', k: '#111' }),
+    ninja({ p: '#8a1f1f', q: '#3a0f0f', r: '#111', S: '#e0b080', w: '#fff', k: '#111' }),
   ];
   const MOUSER_TOP = [
     '................', '................', '....gggggggg....', '...gggggggggg...', '..ggrrggggrrgg..', '..ggrrggggrrgg..',
@@ -141,16 +155,18 @@ const Sprites = (() => {
   ].map(r => make(r, DRONE_PAL, true));
   const bats = [drone, bat, drone, drone];
 
-  // Главарь клана: шипастый шлем, броня, плащ
-  const LEADER_TOP = [
-    '..k..........k..', '..kk........kk..', '...kkkkkkkkkk...', '...ssssssssss...', '...skrrssrrks...', '...sskkkkkkss...',
-    '....ssssssss....', '..cssssssssssc..', '.cccsbbbbbbsccc.', '.cccsbbbbbbsccc.', '.ccc.ssssss.ccc.', '..cc.ssssss.cc..',
+  // Главарь клана (20x24): шипастый шлем, маска, броня, плащ, лезвия на предплечьях
+  const L_HALF = [
+    '..w.......', '..sw..sss.', '...sssksSS', '...sssssss', '...skkkkkk', '...skrrkkk', '...skkkkkk', '....sskkSS', '.....ssSSS', '.w.sssssss',
+    '.ssSSssbbb', '.cSSsssbbk', '.ccSSsssbb', 'wwcSSsskkk', 'wwccSssskk', 'w.ccc.sss.', '..ccc.SSs.', '..ccc.sss.', '..cc..sss.', '..cc..SSs.',
+    '.ccc..sss.', '.cc...sss.', '.c...kkkk.', '....kkkkk.',
   ];
-  const LEADER_LEGS = [
-    ['.....sss..sss...', '.....sss..sss...', '.....sss..sss...', '....kkkk..kkkk..'],
-    ['....sss....sss..', '...sss......sss.', '...sss......sss.', '..kkkk......kkkk'],
-  ];
-  const leader = LEADER_LEGS.map(l => pair(make([...LEADER_TOP, ...l], { s: '#c5d2de', k: '#222', r: '#ff3b3b', c: '#6a2a9a', b: '#b32a22' }, true)));
+  const L_PAL = { s: '#c5d2de', S: '#6f7f90', k: '#1a1a22', r: '#ff3b3b', c: '#6a2a9a', b: '#b32a22', w: '#eef6ff' };
+  const leader = [0, 1].map(f => {
+    const rows = L_HALF.map(mir);
+    if (f) { rows[22] = '.c....kkkk' + 'kkkk....c.'; rows[23] = '.....kkkkk' + 'kkkkk.....'; }
+    return pair(make(rows, L_PAL));
+  });
 
   // ---------- Темы локаций: 4 мира x 3 зоны ----------
   const THEMES = [
@@ -187,6 +203,24 @@ const Sprites = (() => {
         bg: { kind: 'volcano', far: '#3a1410', near: '#1c0a08', glow: '#ff7a2a' } },
     ],
   ];
+
+  // Больше кирпича и канализации в сюжетных локациях
+  Object.assign(THEMES[0][1], { sky: ['#1a0f2e', '#4a2a5a'], stars: false,
+    t: { type: 'brick', base: '#6a3a30', acc: '#3f221c', hi: '#8a5040', strip: '#555a66', stripHi: '#8a909c' },
+    bg: { kind: 'brickwall', far: '#5a2f2a', mortar: '#3a1c18', pipe: '#4a4f5c' } });
+  Object.assign(THEMES[2][0], { sky: ['#2a1c2a', '#8a5a4a'], stars: false,
+    t: { type: 'brick', base: '#7a4a32', acc: '#4a2a1c', hi: '#a06848', strip: '#8a8f99', stripHi: '#c0c6d0' },
+    pl: { base: '#8a8f99', line: '#5a606c', hi: '#c0c6d0' },
+    bg: { kind: 'brickwall', far: '#6a3a2a', mortar: '#3f2014', pipe: '#5a606c' } });
+  Object.assign(THEMES[2][1], { bg: { kind: 'pipes', far: '#2c4045', mortar: '#1f2e33', dark: '#0f1a1d', pipe: '#5a8a96', pipeHi: '#9fd8e8', drip: '#4ae8ff' } });
+  Object.assign(THEMES[2][2], { t: { type: 'brick', base: '#5a2a30', acc: '#33161a', hi: '#8a4a52', strip: '#ff4a3a', stripHi: '#ffa08a' } });
+  Object.assign(THEMES[3][2], { sky: ['#0a1410', '#1f3a2a'], stars: false,
+    t: { type: 'brick', base: '#3f5a44', acc: '#243a2a', hi: '#6a8a70', strip: '#2f8a50', stripHi: '#7aff9a' },
+    pl: { base: '#4f6f55', line: '#2f4a36', hi: '#8aa890' },
+    bg: { kind: 'pipes', far: '#2d4a38', mortar: '#1d3326', dark: '#0f1f16', pipe: '#6b8a60', pipeHi: '#9ac08a', drip: '#7aff5a' } });
+  // сточная вода видна в пропастях
+  THEMES[1][0].water = '#3a8a3a'; THEMES[1][1].water = '#2a8f9a'; THEMES[1][2].water = '#4fd13a';
+  THEMES[2][1].water = '#2fa8b0'; THEMES[3][2].water = '#3fa05a';
 
   // ---------- Тайлы ----------
   function noise(x, base, cols, seed, n) {
@@ -248,6 +282,28 @@ const Sprites = (() => {
   }
   const starList = (() => { const r = rng(77); return Array.from({ length: 45 }, () => [(r() * 300) | 0, (r() * 120) | 0, r() < 0.3 ? 2 : 1]); })();
 
+  // ---------- Граффити ----------
+  const GLYPH = {
+    N: ['10001', '11001', '10101', '10011', '10001'], I: ['111', '010', '010', '010', '111'], J: ['00111', '00010', '00010', '10010', '01100'],
+    A: ['01110', '10001', '11111', '10001', '10001'], P: ['11110', '10001', '11110', '10000', '10000'], Z: ['11111', '00010', '00100', '01000', '11111'],
+    O: ['01110', '10001', '10001', '10001', '01110'], W: ['10001', '10001', '10101', '11011', '10001'], E: ['11111', '10000', '11110', '10000', '11111'],
+    R: ['11110', '10001', '11110', '10010', '10001'], T: ['11111', '00100', '00100', '00100', '00100'], U: ['10001', '10001', '10001', '10001', '01110'],
+    L: ['10000', '10000', '10000', '10000', '11111'],
+  };
+  const SYM = {
+    shell: ['00111100', '01111110', '11011011', '11111111', '11011011', '11111111', '01111110', '00111100'],
+    pizza: ['11111111', '01111110', '01011110', '00111100', '00110100', '00011000', '00001000', '00000000'],
+    star: ['00011000', '00011000', '11111111', '01111110', '00111100', '01100110', '01000010', '00000000'],
+    bolt: ['00001110', '00011100', '00111000', '01111110', '00001100', '00011000', '00110000', '00100000'],
+  };
+  const GCOL = ['#ff3ea5', '#3ee8ff', '#9dff3e', '#ffd23f', '#ff7a2a'];
+  const SYMS = ['shell', 'pizza', 'star', 'bolt'];
+  function glyphRows(ctx, rows, x, y, sc, col) { ctx.fillStyle = col; rows.forEach((row, j) => { for (let i = 0; i < row.length; i++) if (row[i] === '1') ctx.fillRect(x + i * sc, y + j * sc, sc, sc); }); }
+  function drawTag(ctx, word, x, y, sc, col) {
+    for (const pass of [0, 1]) { let cx = x; for (const ch of word) { const g = GLYPH[ch]; if (!g) continue; glyphRows(ctx, g, cx + (pass ? 0 : 1), y + (pass ? 0 : 1), sc, pass ? col : '#0a0a10'); cx += (g[0].length + 1) * sc; } }
+  }
+  function drawSym(ctx, name, x, y, sc, col) { glyphRows(ctx, SYM[name], x + 1, y + 1, sc, '#0a0a10'); glyphRows(ctx, SYM[name], x, y, sc, col); }
+
   // ---------- Фоны (бесшовные по горизонтали, 300x200) ----------
   function bgLayers(th, seed) {
     const W = 300, H = 200, far = canvas(W, H), near = canvas(W, H);
@@ -271,16 +327,28 @@ const Sprites = (() => {
       case 'city':
         for (let i = 0; i < 9; i++) { const x = ri(0, W - 1), w = ri(16, 30), h = ri(60, 110); wrap(xx => { f.fillStyle = b.far; f.fillRect(xx, 190 - h, w, h); windows(f, xx, 190 - h, w, h, b.win); }, x, w); }
         for (let i = 0; i < 7; i++) {
-          const x = ri(0, W - 1), w = ri(16, 26), h = ri(40, 80), k = r();
+          const x = ri(0, W - 1), w = ri(16, 26), h = ri(40, 80), k = r(), gk = ri(0, 7);
           wrap(xx => {
             n.fillStyle = b.near; n.fillRect(xx, 190 - h, w, h); n.fillStyle = b.edge; n.fillRect(xx, 190 - h, w, 2);
             if (k < 0.35) { n.fillStyle = '#2a2018'; n.fillRect(xx + 4, 190 - h - 8, 2, 8); n.fillRect(xx + w - 6, 190 - h - 8, 2, 8); n.fillStyle = '#4a3a28'; n.fillRect(xx + 2, 190 - h - 18, w - 4, 10); n.fillStyle = '#6a5238'; n.fillRect(xx + 2, 190 - h - 18, w - 4, 2); }
             else if (k < 0.7) { n.fillStyle = b.edge; n.fillRect(xx + (w >> 1), 190 - h - 14, 1, 14); n.fillStyle = '#ff3b3b'; n.fillRect(xx + (w >> 1) - 1, 190 - h - 16, 3, 2); }
             if (b.neon) { n.fillStyle = b.neon[ri(0, b.neon.length - 1)]; n.fillRect(xx + 3, 190 - h + 10, w - 6, 6); n.fillStyle = 'rgba(255,255,255,.6)'; n.fillRect(xx + 4, 190 - h + 11, w - 8, 1); }
             else windows(n, xx, 190 - h, w, h, b.win);
+            if (gk < 4 && h > 50) drawSym(n, SYMS[gk], xx + ((w - 16) >> 1), 164, 2, GCOL[gk]);
           }, x, w);
         }
         break;
+      case 'brickwall': {
+        f.fillStyle = b.far; f.fillRect(0, 0, W, H);
+        f.fillStyle = b.mortar; for (let y = 0; y < H; y += 8) { f.fillRect(0, y, W, 1); for (let x = ((y / 8) % 2) * 8; x < W; x += 16) f.fillRect(x, y, 1, 8); }
+        for (let i = 0; i < 110; i++) { const row = ri(0, 24); f.fillStyle = i % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.16)'; f.fillRect((row % 2) * 8 + ri(0, 17) * 16 + 1, row * 8 + 1, 14, 6); }
+        for (let i = 0; i < 4; i++) { const x = i * 75 + 14; f.fillStyle = '#14100e'; f.fillRect(x, 46, 22, 34); f.fillStyle = '#6a4a2a'; f.fillRect(x, 53, 22, 5); f.fillRect(x, 67, 22, 5); f.fillStyle = '#8a6a3a'; f.fillRect(x, 53, 22, 1); f.fillRect(x, 67, 22, 1); }
+        [['NINJA', 6, 96], ['PIZZA', 98, 118], ['POWER', 196, 100]].forEach(([w, x, y], i) => drawTag(f, w, x, y, 2, GCOL[(i * 2) % 5]));
+        drawSym(f, 'shell', 262, 128, 3, '#9dff3e'); drawSym(f, 'star', 160, 142, 2, '#ffd23f'); drawSym(f, 'bolt', 60, 142, 2, '#3ee8ff');
+        for (let i = 0; i < 5; i++) { const x = ri(0, W - 1); wrap(xx => { n.fillStyle = b.pipe; n.fillRect(xx, 0, 5, H); n.fillStyle = 'rgba(255,255,255,.25)'; n.fillRect(xx + 1, 0, 1, H); n.fillStyle = '#20222a'; for (let y = 14; y < H; y += 40) n.fillRect(xx - 1, y, 7, 3); }, x, 6); }
+        for (let i = 0; i < 3; i++) { const x = ri(0, W - 30); n.fillStyle = '#2f6a3a'; n.fillRect(x, 172, 26, 18); n.fillStyle = '#1f4a28'; n.fillRect(x - 1, 169, 28, 4); n.fillStyle = '#4a9a5a'; n.fillRect(x + 2, 175, 22, 1); }
+        break;
+      }
       case 'pizzeria':
         f.fillStyle = b.far; f.fillRect(0, 0, W, H);
         f.fillStyle = b.stripe; for (let x = 0; x < W; x += 12) f.fillRect(x, 0, 6, H);
@@ -301,6 +369,7 @@ const Sprites = (() => {
         f.fillStyle = b.far; f.fillRect(0, 0, W, H);
         f.fillStyle = b.mortar; for (let y = 0; y < H; y += 10) { f.fillRect(0, y, W, 1); for (let x = ((y / 10) % 2) * 10; x < W; x += 20) f.fillRect(x, y, 1, 10); }
         for (let i = 0; i < 5; i++) { const x = i * 60 + 15; f.fillStyle = b.dark; f.fillRect(x, 70, 30, 130); f.fillRect(x + 3, 64, 24, 6); f.fillRect(x + 7, 60, 16, 4); }
+        for (let i = 0; i < 5; i++) if (r() < 0.85) drawSym(f, SYMS[i % 4], i * 60 + 48, ri(92, 120), 3, GCOL[(i + 1) % 5]);
         for (const y of [30, 62]) {
           n.fillStyle = b.pipe; n.fillRect(0, y, W, 9); n.fillStyle = b.pipeHi; n.fillRect(0, y + 1, W, 2); n.fillStyle = 'rgba(0,0,0,.35)'; n.fillRect(0, y + 7, W, 2);
           for (let x = 20; x < W; x += 60) { n.fillStyle = b.pipeHi; n.fillRect(x, y - 2, 5, 13); }
@@ -375,7 +444,7 @@ const Sprites = (() => {
   }
   const bgs = THEMES.map((w, wi) => w.map((th, zi) => bgLayers(th, 100 + wi * 31 + zi * 7)));
 
-  return { turtles, walkers, bats, leader, shooter, shell, heart, sword, pizza, foods, tiles, bgs, THEMES, sky, starList, canvas, make, rng };
+  return { turtles, splinter, walkers, bats, leader, shooter, shell, heart, sword, pizza, foods, tiles, bgs, THEMES, sky, starList, canvas, make, rng };
 })();
 
 // ---------- Графические помощники (холст 300x200 в масштабе x3) ----------

@@ -52,7 +52,7 @@ const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h 
 
 function mkEnemy(s, n) {
   const spd = 0.45 + n * 0.006;
-  if (s.type === 'boss') { const hp = 22 + Math.floor(n * 1.2); return { type: 'boss', x: s.x, y: s.y - 28, w: 20, h: 28, vx: 0, vy: 0, hp, maxHp: hp, dir: -1, spd: 0.55, cd: 90, kb: 0, flash: 0, t: 0, dead: false, onGround: false }; }
+  if (s.type === 'boss') { const hp = 22 + Math.floor(n * 1.2); return { type: 'boss', x: s.x, y: s.y - 40, w: 24, h: 40, vx: 0, vy: 0, hp, maxHp: hp, dir: -1, spd: 0.55, cd: 90, kb: 0, flash: 0, t: 0, dead: false, onGround: false }; }
   if (s.type === 'fly') return { type: 'fly', x: s.x, y: s.y, by: s.y, w: 12, h: 8, vx: 0, vy: 0, hp: 2 + Math.floor(n * 0.4), dir: Math.random() < 0.5 ? 1 : -1, spd: 0.4 + n * 0.005, ph: Math.random() * 6, kb: 0, kvx: 0, flash: 0, t: 0, dead: false };
   return { type: s.type, x: s.x, y: s.y - 14, w: 12, h: 14, vx: 0, vy: 0, hp: 3 + Math.floor(n * 0.5), dir: Math.random() < 0.5 ? 1 : -1, spd, cd: 60 + Math.random() * 60, kb: 0, flash: 0, t: 0, dead: false, onGround: false };
 }
@@ -61,8 +61,8 @@ class Play {
   constructor(n) {
     this.n = n; State.last = n; const L = this.L = Levels.build(n);
     const st = this.st = State.stats();
-    const sy = L.top[1] * T - 14;
-    this.p = { x: 24, y: sy, w: 10, h: 14, vx: 0, vy: 0, face: 1, onGround: true, hp: st.maxHp, inv: 0, grace: 0, atk: 0, atkCd: 0, shotCd: 0, shield: false, coyote: 0, jumpBuf: 0, anim: 0, hit: new Set(), safe: { x: 24, y: sy } };
+    const sy = L.top[1] * T - 18;
+    this.p = { x: 24, y: sy, w: 12, h: 18, vx: 0, vy: 0, face: 1, onGround: true, hp: st.maxHp, inv: 0, grace: 0, atk: 0, atkCd: 0, shotCd: 0, shield: false, coyote: 0, jumpBuf: 0, anim: 0, hit: new Set(), safe: { x: 24, y: sy } };
     this.cam = 0; this.t = 0; this.got = 0; this.mode = 'play'; this.dieT = 0; this.shake = 0;
     this.enemies = L.enemies.map(e => mkEnemy(e, n));
     this.pick = L.coins.map(c => ({ x: c.x, y: c.y, w: 6, h: 7, taken: false, ph: Math.random() * 6 }));
@@ -131,7 +131,7 @@ class Play {
       const p = this.p, L = this.L;
       p.vx = 0; p.vy = Math.min(p.vy + GRAV, MAXFALL); moveY(p, L); p.face = 1;
       this.cam += (Math.max(0, Math.min(L.W * T - VW, p.x + p.w / 2 - VW / 2)) - this.cam) * 0.12;
-      if (this.praiseT === 2) this.puff(L.finishX + 62, L.top[L.W - 3] * T - 16, '#8a7aa8', 18);
+      if (this.praiseT === 2) this.puff(L.finishX + 56, L.top[L.W - 3] * T - 24, '#8a7aa8', 18);
       this.updateFx();
       if (this.praiseT >= 260 || (this.praiseT > 50 && Input.pressed('ok'))) this.win();
       return;
@@ -189,7 +189,7 @@ class Play {
 
     // --- удар мечом ---
     if (p.atk > 3 && p.atk < 11) {
-      const box = { x: p.face > 0 ? p.x + p.w - 1 : p.x - 19, y: p.y - 3, w: 20, h: 19 };
+      const box = { x: p.face > 0 ? p.x + p.w - 1 : p.x - 23, y: p.y - 2, w: 24, h: 22 };
       for (const e of this.enemies) if (!e.dead && !p.hit.has(e) && overlap(box, e)) { p.hit.add(e); this.hurtEnemy(e, this.st.sword, p.x + p.w / 2); }
       this.bullets = this.bullets.filter(b => { if (overlap(box, b)) { this.puff(b.x, b.y, '#ffe14a', 4); Sound.sfx('block'); return false; } return true; });
     }
@@ -285,8 +285,8 @@ class Play {
       if (e.cd <= 0 && Math.abs(dx) < 170 && Math.abs(dy) < (boss ? 60 : 50)) {
         e.cd = boss ? 80 : Math.max(55, 130 - this.n * 1.5); Sound.sfx('eshoot');
         const bx = e.x + (e.dir > 0 ? e.w + 3 : -4);
-        this.bullets.push({ x: bx, y: e.y + (boss ? 8 : 7), w: 5, h: 4, vx: e.dir * (boss ? 2 : 1.6) });
-        if (boss) this.bullets.push({ x: bx, y: e.y + 20, w: 5, h: 4, vx: e.dir * 2 });
+        this.bullets.push({ x: bx, y: e.y + (boss ? 12 : 7), w: 5, h: 4, vx: e.dir * (boss ? 2 : 1.6) });
+        if (boss) this.bullets.push({ x: bx, y: e.y + 28, w: 5, h: 4, vx: e.dir * 2 });
       }
     }
   }
@@ -322,6 +322,12 @@ class Play {
         const off = -Math.floor((cam * k) % 300);
         c.drawImage(layer, off, 0); c.drawImage(layer, off + 300, 0);
       }
+      const wc = Sprites.THEMES[L.world][z].water;
+      if (wc) {
+        c.globalAlpha = alpha * 0.92; c.fillStyle = wc; c.fillRect(-4, 178, VW + 8, 24);
+        c.fillStyle = 'rgba(255,255,255,.3)'; for (let x = 0; x < VW; x += 4) c.fillRect(x, 178 + Math.round(Math.sin((x + this.t * 0.7) / 7)), 4, 1);
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(-4, 190, VW + 8, 12);
+      }
       c.globalAlpha = 1;
     };
     if (this.bgFade > 0) { drawBg(this.bgFrom, 1); drawBg(zc, 1 - this.bgFade / 40); this.bgFade--; } else drawBg(zc, 1);
@@ -351,7 +357,7 @@ class Play {
       let img;
       if (e.type === 'boss') {
         img = Sprites.leader[Math.abs(e.vx) > 0.1 ? Math.floor(e.t / 10) % 2 : 0][e.dir > 0 ? 0 : 1];
-        c.drawImage(img, Math.round(e.x - cam - 6), Math.round(e.y + OY - 4), 32, 32);
+        c.drawImage(img, Math.round(e.x - cam - 8), Math.round(e.y + OY - 8), 40, 48);
         continue;
       }
       if (e.type === 'walk') img = Sprites.walkers[L.world][Math.floor(e.t / 10) % 2][e.dir > 0 ? 0 : 1];
@@ -366,7 +372,7 @@ class Play {
     for (const s of this.stars) this.drawStar(c, s.x - cam, s.y + OY, s.rot);
 
     this.drawHero(c, cam);
-    if (this.mode === 'praise' && this.praiseT > 1) { const lx = L.finishX + 46, ly = L.top[L.W - 3] * T - 32 + OY; c.drawImage(Sprites.leader[0][1], Math.round(lx - cam), Math.round(ly), 32, 32); }
+    if (this.mode === 'praise' && this.praiseT > 1) { const lx = L.finishX + 36, ly = L.top[L.W - 3] * T - 48 + OY; c.drawImage(Sprites.leader[0][1], Math.round(lx - cam), Math.round(ly), 40, 48); }
 
     for (const q of this.parts) { c.fillStyle = q.col; c.fillRect(Math.round(q.x - cam), Math.round(q.y + OY), q.s, q.s); }
     for (const q of this.texts) Gfx.text(q.s, Math.round(q.x - cam), Math.round(q.y + OY), { color: q.col });
@@ -410,19 +416,28 @@ class Play {
     let img = set.idle[fi];
     if (!p.onGround) img = set.jump[fi];
     else if (Math.abs(p.vx) > 0.2) img = set[Math.floor(p.anim) % 2 ? 'run0' : 'run1'][fi];
-    const px = Math.round(p.x - cam) - 3, py = Math.round(p.y) + OY - 2;
+    const px = Math.round(p.x - cam) - 4, py = Math.round(p.y) + OY - 6;
     c.drawImage(img, px, py);
     // щит
-    if (p.shield) c.drawImage(Sprites.shell, px + (p.face > 0 ? 12 : -4), py + 3);
-    // катана
+    if (p.shield) c.drawImage(Sprites.shell, px + (p.face > 0 ? 15 : -3), py + 8);
+    // оружие: катана (синий), сай (красный), боевой посох (фиолетовый), нунчаки (оранжевый)
     if (p.atk > 0) {
-      const prog = 1 - p.atk / 12;
-      c.save(); c.translate(px + 8 + p.face * 4, py + 8); c.scale(p.face, 1); c.rotate(-1.3 + 2.4 * prog);
-      c.fillStyle = '#7b4a1e'; c.fillRect(0, -1, 4, 3);
-      c.fillStyle = '#e8f0ff'; c.fillRect(4, -1, 15, 2); c.fillStyle = '#9fb0c8'; c.fillRect(4, 1, 15, 1);
+      const prog = 1 - p.atk / 12, hero = State.hero;
+      c.save(); c.translate(px + 10 + p.face * 6, py + 14); c.scale(p.face, 1); c.rotate(-1.3 + 2.4 * prog);
+      if (hero === 0) {
+        c.fillStyle = '#7b4a1e'; c.fillRect(0, -1, 5, 3); c.fillStyle = '#ffd23f'; c.fillRect(5, -2, 1, 5);
+        c.fillStyle = '#e8f0ff'; c.fillRect(6, -1, 17, 2); c.fillStyle = '#9fb0c8'; c.fillRect(6, 1, 17, 1);
+      } else if (hero === 1) {
+        c.fillStyle = '#7b4a1e'; c.fillRect(0, -1, 5, 3); c.fillStyle = '#c0c8d8'; c.fillRect(5, -4, 1, 9); c.fillRect(6, -4, 5, 1); c.fillRect(6, 4, 5, 1); c.fillRect(6, -1, 14, 2);
+      } else if (hero === 2) {
+        c.fillStyle = '#a8703a'; c.fillRect(-6, -1, 32, 2); c.fillStyle = '#5a3a1a'; c.fillRect(-6, -1, 3, 2); c.fillRect(23, -1, 3, 2);
+      } else {
+        c.fillStyle = '#c98a3a'; c.fillRect(0, -1, 9, 3); c.fillStyle = '#7b4a1e'; c.fillRect(2, -1, 1, 3); c.fillStyle = '#ccc'; c.fillRect(9, 0, 5, 1);
+        c.fillStyle = '#c98a3a'; c.fillRect(14, -1, 9, 3); c.fillStyle = '#7b4a1e'; c.fillRect(20, -1, 1, 3);
+      }
       c.restore();
       c.save(); c.globalAlpha = 0.45 * (1 - prog); c.fillStyle = '#fff';
-      c.fillRect(px + (p.face > 0 ? 14 : -4), py + 2 + Math.round(prog * 8), 6, 2); c.restore();
+      c.fillRect(px + (p.face > 0 ? 16 : -4), py + 6 + Math.round(prog * 10), 8, 2); c.restore();
     }
   }
 
