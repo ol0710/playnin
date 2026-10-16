@@ -1,6 +1,6 @@
 // Звук: чиптюн на WebAudio (никаких аудиофайлов)
 const Sound = (() => {
-  let ctx = null, master = null, muted = false, trackName = null, step = 0, nextT = 0;
+  let ctx = null, master = null, muted = false, vol = 6, trackName = null, step = 0, nextT = 0;
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
   const TRACKS = {
@@ -21,7 +21,7 @@ const Sound = (() => {
     try {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain();
-      master.gain.value = muted ? 0 : 0.25;
+      master.gain.value = muted ? 0 : vol * 0.0417;
       master.connect(ctx.destination);
     } catch (e) { ctx = null; }
   }
@@ -57,6 +57,7 @@ const Sound = (() => {
     eshoot: () => tone(500, 0.12, 'square', 0.1, null, 200),
     stomp:  () => tone(160, 0.12, 'square', 0.22, null, 400),
     die:    () => tone(500, 0.8, 'sawtooth', 0.25, null, 40),
+    eat:    () => { tone(523, 0.06, 'square', 0.14); tone(659, 0.06, 'square', 0.14, ctx && ctx.currentTime + 0.06); tone(784, 0.12, 'square', 0.14, ctx && ctx.currentTime + 0.12); },
     select: () => tone(660, 0.05, 'square', 0.1),
     ok:     () => { tone(660, 0.06, 'square', 0.14); tone(880, 0.1, 'square', 0.14, ctx && ctx.currentTime + 0.06); },
     buy:    () => { tone(784, 0.08, 'square', 0.14); tone(1047, 0.08, 'square', 0.14, ctx && ctx.currentTime + 0.08); tone(1568, 0.16, 'square', 0.14, ctx && ctx.currentTime + 0.16); },
@@ -81,6 +82,8 @@ const Sound = (() => {
     sfx(name) { if (ctx && SFX[name]) SFX[name](); },
     music(name) { if (trackName !== name) { trackName = name; step = 0; nextT = 0; } },
     get muted() { return muted; },
-    toggle() { muted = !muted; if (master) master.gain.value = muted ? 0 : 0.25; return muted; },
+    get vol() { return vol; },
+    setVol(v) { vol = Math.max(0, Math.min(10, v)); if (master) master.gain.value = muted ? 0 : vol * 0.0417; return vol; },
+    toggle() { muted = !muted; if (master) master.gain.value = muted ? 0 : vol * 0.0417; return muted; },
   };
 })();

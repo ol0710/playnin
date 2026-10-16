@@ -97,22 +97,24 @@ class Select extends Scene {
       Gfx.sprite(sel ? set[f ? 'run0' : 'run1'][0] : set.idle[0], x + 8, 38, 3);
       Gfx.text(t('hero' + i), x + 32, 92, { align: 'center', color: sel ? '#ffd23f' : '#fff' });
     }
-    ['c1', 'c2', 'c3', 'c4'].forEach((k, i) => Gfx.text(t(k), 150, 126 + i * 12, { align: 'center', color: '#c8c8ff' }));
+    ['c1', 'c2', 'c3', 'c4', 'c5'].forEach((k, i) => Gfx.text(t(k), 150, 122 + i * 11, { align: 'center', color: k === 'c5' ? '#9ad0ff' : '#c8c8ff' }));
     Gfx.text(t('back') + ': ESC', 150, 184, { align: 'center', color: '#8a8ab8' });
   }
 }
 
 // ---------- Карта уровней ----------
+const WORLD_COL = ['#ff9a1f', '#3fe07a', '#4ab8ff', '#ff4a5a'];
 class MapScene extends Scene {
   constructor() { super(); Sound.music('menu'); }
   back() { Main.go(new Title()); }
   draw() {
     MenuBg.draw(this.tk);
-    Gfx.text(t('levels'), 150, 8, { size: 8, align: 'center', color: '#ffd23f' });
+    const sl = /^l\d+$/.test(UI.sel || '') ? +UI.sel.slice(1) : State.unlocked, sw = Math.floor((Math.min(sl, 40) - 1) / 10);
+    Gfx.text(t('levels') + ': ' + t('wn' + sw), 150, 8, { size: 8, align: 'center', color: WORLD_COL[sw] });
     Gfx.coin(244, 8, this.tk * 0.1); Gfx.text(String(State.coins), 254, 8);
     for (let n = 1; n <= Levels.TOTAL; n++) {
       const x = 12 + ((n - 1) % 10) * 28, y = 26 + Math.floor((n - 1) / 10) * 28, locked = n > State.unlocked, done = n < State.unlocked;
-      UI.button('l' + n, locked ? '?' : String(n), x, y, 24, 24, () => Main.go(new Play(n)), { disabled: locked, arrow: false, fill: done ? '#143a1c' : undefined, border: done ? '#52e05a' : undefined });
+      UI.button('l' + n, locked ? '?' : String(n), x, y, 24, 24, () => Main.go(new Play(n)), { disabled: locked, arrow: false, fill: done ? '#143a1c' : undefined, border: WORLD_COL[Math.floor((n - 1) / 10)] });
     }
     const row = [['shop', t('shop'), () => Main.push(new Shop())], ['bank', t('bank'), () => Main.push(new Bank())], ['ad', t('ad', AD_REWARD), () => Main.push(new AdScene())]];
     const ws = row.map(r => Gfx.width(r[1]) + 14), total = ws.reduce((a, b) => a + b, 0) + 8 * (row.length - 1);

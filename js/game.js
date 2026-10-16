@@ -52,21 +52,24 @@ const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h 
 
 function mkEnemy(s, n) {
   const spd = 0.45 + n * 0.006;
+  if (s.type === 'boss') { const hp = 22 + Math.floor(n * 1.2); return { type: 'boss', x: s.x, y: s.y - 28, w: 20, h: 28, vx: 0, vy: 0, hp, maxHp: hp, dir: -1, spd: 0.55, cd: 90, kb: 0, flash: 0, t: 0, dead: false, onGround: false }; }
   if (s.type === 'fly') return { type: 'fly', x: s.x, y: s.y, by: s.y, w: 12, h: 8, vx: 0, vy: 0, hp: 2 + Math.floor(n * 0.4), dir: Math.random() < 0.5 ? 1 : -1, spd: 0.4 + n * 0.005, ph: Math.random() * 6, kb: 0, kvx: 0, flash: 0, t: 0, dead: false };
   return { type: s.type, x: s.x, y: s.y - 14, w: 12, h: 14, vx: 0, vy: 0, hp: 3 + Math.floor(n * 0.5), dir: Math.random() < 0.5 ? 1 : -1, spd, cd: 60 + Math.random() * 60, kb: 0, flash: 0, t: 0, dead: false, onGround: false };
 }
 
 class Play {
   constructor(n) {
-    this.n = n; const L = this.L = Levels.build(n);
+    this.n = n; State.last = n; const L = this.L = Levels.build(n);
     const st = this.st = State.stats();
     const sy = L.top[1] * T - 14;
     this.p = { x: 24, y: sy, w: 10, h: 14, vx: 0, vy: 0, face: 1, onGround: true, hp: st.maxHp, inv: 0, grace: 0, atk: 0, atkCd: 0, shotCd: 0, shield: false, coyote: 0, jumpBuf: 0, anim: 0, hit: new Set(), safe: { x: 24, y: sy } };
     this.cam = 0; this.t = 0; this.got = 0; this.mode = 'play'; this.dieT = 0; this.shake = 0;
     this.enemies = L.enemies.map(e => mkEnemy(e, n));
     this.pick = L.coins.map(c => ({ x: c.x, y: c.y, w: 6, h: 7, taken: false, ph: Math.random() * 6 }));
+    this.foods = L.foods.map(f => ({ x: f.x, y: f.y, w: 10, h: 10, k: f.k, taken: false, ph: Math.random() * 6 }));
+    this.isBoss = n % 10 === 0; this.praiseT = 0; this.warn = 0;
     this.drops = []; this.bullets = []; this.stars = []; this.parts = []; this.texts = [];
-    this.zone = 0; this.banner = { t: 140, text: t('zone', 1, t('z0')) };
+    this.zone = 0; this.banner = { t: 140, text: t('zone', 1, t('w' + L.world + 'z0')) };
     this.bgPrev = -1; this.bgFade = 0;
     this.dmgContact = 2 + Math.floor(n * 0.25);
     this.dmgBullet = 2 + Math.floor(n * 0.2);
@@ -78,6 +81,12 @@ class Play {
     for (let i = 0; i < n; i++) this.parts.push({ x, y, vx: (Math.random() - 0.5) * 2.4, vy: -Math.random() * 2 - 0.3, life: 20 + Math.random() * 14, col, s: 1 + (Math.random() * 2 | 0) });
   }
   say(x, y, s, col = '#fff') { this.texts.push({ x, y, s, col, life: 40 }); }
+  addFood(x, y) { const k = Math.floor(Math.random() * Sprites.foods.length); this.drops.push({ x, y, w: 10, h: 10, vx: (Math.random() - 0.5) * 1.6, vy: -3, onGround: false, ph: Math.random() * 6, food: k }); }
+  eat(k) {
+    const f = Sprites.foods[k], p = this.p;
+    p.hp = Math.min(this.st.maxHp, p.hp + f.heal);
+    Sound.sfx('eat'); this.puff(p.x + 5, p.y + 4, '#7dff7d', 6); this.say(p.x, p.y - 6, '+' + f.heal, '#7dff7d');
+  }
   addCoin(x, y) { this.drops.push({ x, y, w: 6, h: 6, vx: (Math.random() - 0.5) * 2, vy: -2.5 - Math.random() * 1.5, onGround: false, ph: Math.random() * 6 }); }
 
   hurtPlayer(dmg, srcX, kind) {
@@ -93,16 +102,19 @@ class Play {
   }
 
   hurtEnemy(e, dmg, fromX) {
-    e.hp -= dmg; e.flash = 8; e.kb = 12;
+    const big = e.type === 'boss';
+    e.hp -= dmg; e.flash = 8; e.kb = big ? 4 : 12;
     const d = (e.x + e.w / 2 < fromX) ? -1 : 1;
-    e.vx = d * 2.2; e.kvx = d * 2.2;
+    e.vx = d * (big ? 0.8 : 2.2); e.kvx = e.vx;
     this.say(e.x, e.y - 6, String(dmg));
     this.puff(e.x + e.w / 2, e.y + e.h / 2, '#fff', 5);
     if (e.hp <= 0) {
       e.dead = true; Sound.sfx('kill');
       this.puff(e.x + e.w / 2, e.y + e.h / 2, e.type === 'shoot' ? '#8fa1b3' : '#b13a9a', 14);
-      const k = 1 + (Math.random() * 3 | 0);
+      const k = big ? 12 : 1 + (Math.random() * 3 | 0);
       for (let i = 0; i < k; i++) this.addCoin(e.x + e.w / 2 - 3, e.y);
+      if (big) { this.addFood(e.x, e.y); this.addFood(e.x + 10, e.y); this.shake = 14; }
+      else if (Math.random() < 0.12) this.addFood(e.x + e.w / 2 - 5, e.y);
     } else Sound.sfx('hit');
   }
 
@@ -114,6 +126,16 @@ class Play {
     }
     if (this.mode === 'play' && Input.pressed('pause')) { this.mode = 'pause'; return; }
     if (this.mode === 'won') return;
+    if (this.mode === 'praise') {
+      this.t++; this.praiseT++;
+      const p = this.p, L = this.L;
+      p.vx = 0; p.vy = Math.min(p.vy + GRAV, MAXFALL); moveY(p, L); p.face = 1;
+      this.cam += (Math.max(0, Math.min(L.W * T - VW, p.x + p.w / 2 - VW / 2)) - this.cam) * 0.12;
+      if (this.praiseT === 2) this.puff(L.finishX + 62, L.top[L.W - 3] * T - 16, '#8a7aa8', 18);
+      this.updateFx();
+      if (this.praiseT >= 260 || (this.praiseT > 50 && Input.pressed('ok'))) this.win();
+      return;
+    }
     this.t++;
     const L = this.L, p = this.p;
 
@@ -189,7 +211,7 @@ class Play {
       if (!overlap(p, e)) continue;
       if (p.vy > 0.8 && (p.y + p.h) - e.y < 9) { // прыжок сверху
         this.hurtEnemy(e, this.st.sword, p.x + p.w / 2); p.vy = -4.8; p.grace = 12; Sound.sfx('stomp');
-      } else if (p.grace <= 0) this.hurtPlayer(this.dmgContact, e.x + e.w / 2, 'contact');
+      } else if (p.grace <= 0) this.hurtPlayer(this.dmgContact + (e.type === 'boss' ? 2 : 0), e.x + e.w / 2, 'contact');
     }
 
     // --- пули врагов ---
@@ -203,21 +225,25 @@ class Play {
     // --- монеты ---
     const pb = { x: p.x - 3, y: p.y - 3, w: p.w + 6, h: p.h + 6 };
     for (const c of this.pick) if (!c.taken && overlap(pb, c)) this.takeCoin(c);
+    for (const f of this.foods) if (!f.taken && overlap(pb, f)) { f.taken = true; this.eat(f.k); }
     for (const d of this.drops) {
       d.vy = Math.min(d.vy + GRAV * 0.8, MAXFALL); d.vx *= 0.97; moveX(d, L); moveY(d, L);
-      if (overlap(pb, d)) { d.taken = true; this.takeCoin(d, true); }
+      if (overlap(pb, d)) { d.taken = true; if (d.food !== undefined) this.eat(d.food); else this.takeCoin(d, true); }
     }
     this.drops = this.drops.filter(d => !d.taken);
 
     // --- зоны, камера, финиш ---
     const z = Levels.zoneAt(L, (p.x + 5) / T);
-    if (z !== this.zone) { this.zone = z; this.banner = { t: 120, text: t('zone', z + 1, t('z' + z)) }; }
+    if (z !== this.zone) { this.zone = z; this.banner = { t: 120, text: t('zone', z + 1, t('w' + L.world + 'z' + z)) }; }
     if (this.banner.t > 0) this.banner.t--;
     const want = Math.max(0, Math.min(L.W * T - VW, p.x + p.w / 2 - VW / 2 + p.face * 20));
     this.cam += (want - this.cam) * 0.12;
     this.updateFx();
 
-    if (p.x > L.finishX) this.win();
+    if (p.x > L.finishX) {
+      if (this.isBoss && this.enemies.some(e => e.type === 'boss')) { p.x = L.finishX; p.vx = 0; this.warn = 90; }
+      else this.startPraise();
+    }
   }
 
   takeCoin(c, drop) {
@@ -244,20 +270,30 @@ class Play {
     }
     if (e.kb > 0) { e.kb--; e.vx *= 0.88; }
     else if (e.type === 'walk') e.vx = e.dir * e.spd;
+    else if (e.type === 'boss') { e.dir = Math.sign(dx) || e.dir; e.vx = (Math.abs(dx) < 240 && Math.abs(dx) > 14) ? e.dir * e.spd : 0; }
     else { e.vx = 0; e.dir = Math.sign(dx) || e.dir; }
     e.vy = Math.min(e.vy + GRAV, MAXFALL);
     moveX(e, L); moveY(e, L);
+    if (e.type === 'boss' && e.onGround && e.vx && !solid(L, Math.floor((e.x + (e.dir > 0 ? e.w + 2 : -2)) / T), Math.floor((e.y + e.h + 2) / T))) e.x -= e.vx;
     if (e.type === 'walk' && e.kb <= 0 && e.onGround) {
       const ax = e.dir > 0 ? e.x + e.w + 1 : e.x - 1;
       if (e.hitWall || !solid(L, Math.floor(ax / T), Math.floor((e.y + e.h + 2) / T))) e.dir *= -1;
     }
-    if (e.type === 'shoot') {
+    if (e.type === 'shoot' || e.type === 'boss') {
       e.cd--;
-      if (e.cd <= 0 && Math.abs(dx) < 170 && Math.abs(dy) < 50) {
-        e.cd = Math.max(55, 130 - this.n * 1.5); Sound.sfx('eshoot');
-        this.bullets.push({ x: e.x + (e.dir > 0 ? e.w + 3 : -4), y: e.y + 7, w: 5, h: 4, vx: e.dir * 1.6 });
+      const boss = e.type === 'boss';
+      if (e.cd <= 0 && Math.abs(dx) < 170 && Math.abs(dy) < (boss ? 60 : 50)) {
+        e.cd = boss ? 80 : Math.max(55, 130 - this.n * 1.5); Sound.sfx('eshoot');
+        const bx = e.x + (e.dir > 0 ? e.w + 3 : -4);
+        this.bullets.push({ x: bx, y: e.y + (boss ? 8 : 7), w: 5, h: 4, vx: e.dir * (boss ? 2 : 1.6) });
+        if (boss) this.bullets.push({ x: bx, y: e.y + 20, w: 5, h: 4, vx: e.dir * 2 });
       }
     }
+  }
+
+  startPraise() {
+    this.mode = 'praise'; this.praiseT = 0; this.p.vx = 0; this.bullets = [];
+    Sound.sfx('win'); Sound.music(null);
   }
 
   win() {
@@ -280,8 +316,8 @@ class Play {
     const drawBg = (z, alpha) => {
       c.globalAlpha = alpha;
       c.fillStyle = Sprites.sky(c, L.world, z); c.fillRect(-4, -4, VW + 8, VH + 8);
-      if (L.world === 2 && z < 2) { c.fillStyle = '#fff'; for (const s of Sprites.starList) c.fillRect(s[0], s[1], s[2], s[2]); }
-      const bg = Sprites.bgs[z];
+      if (Sprites.THEMES[L.world][z].stars) { c.fillStyle = '#fff'; for (const s of Sprites.starList) c.fillRect(s[0], s[1], s[2], s[2]); }
+      const bg = Sprites.bgs[L.world][z];
       for (const [layer, k] of [[bg.far, 0.2], [bg.near, 0.5]]) {
         const off = -Math.floor((cam * k) % 300);
         c.drawImage(layer, off, 0); c.drawImage(layer, off + 300, 0);
@@ -294,7 +330,7 @@ class Play {
     const x0 = Math.max(0, Math.floor(cam / T)), x1 = Math.min(L.W - 1, Math.floor((cam + VW) / T));
     for (let ty = 0; ty < L.ROWS; ty++) for (let tx = x0; tx <= x1; tx++) {
       const v = L.tiles[ty][tx]; if (!v) continue;
-      const ts = Sprites.tiles[Levels.zoneAt(L, tx)];
+      const ts = Sprites.tiles[L.world][Levels.zoneAt(L, tx)];
       const img = v === 1 ? (ty > 0 && L.tiles[ty - 1][tx] === 1 ? ts.fill : ts.top) : v === 2 ? ts.plat : ts.spike;
       c.drawImage(img, tx * T - cam, ty * T + OY);
     }
@@ -305,15 +341,21 @@ class Play {
 
     // монеты
     for (const k of this.pick) if (!k.taken && k.x - cam > -8 && k.x - cam < VW + 8) Gfx.coin(k.x - cam, k.y + OY, this.t * 0.12 + k.ph);
-    for (const d of this.drops) Gfx.coin(d.x - cam, d.y + OY, this.t * 0.2 + d.ph);
+    for (const f of this.foods) if (!f.taken && f.x - cam > -12 && f.x - cam < VW + 12) c.drawImage(Sprites.foods[f.k].img, Math.round(f.x - cam), Math.round(f.y + OY + Math.sin(this.t * 0.08 + f.ph) * 2));
+    for (const d of this.drops) { if (d.food !== undefined) c.drawImage(Sprites.foods[d.food].img, Math.round(d.x - cam), Math.round(d.y + OY)); else Gfx.coin(d.x - cam, d.y + OY, this.t * 0.2 + d.ph); }
 
     // враги
     for (const e of this.enemies) {
       if (e.x - cam < -20 || e.x - cam > VW + 20) continue;
       if (e.flash > 0 && e.flash % 2) continue;
       let img;
-      if (e.type === 'walk') img = Sprites.walker[Math.floor(e.t / 10) % 2][e.dir > 0 ? 0 : 1];
-      else if (e.type === 'fly') img = Sprites.bat[Math.floor(e.t / 8) % 2];
+      if (e.type === 'boss') {
+        img = Sprites.leader[Math.abs(e.vx) > 0.1 ? Math.floor(e.t / 10) % 2 : 0][e.dir > 0 ? 0 : 1];
+        c.drawImage(img, Math.round(e.x - cam - 6), Math.round(e.y + OY - 4), 32, 32);
+        continue;
+      }
+      if (e.type === 'walk') img = Sprites.walkers[L.world][Math.floor(e.t / 10) % 2][e.dir > 0 ? 0 : 1];
+      else if (e.type === 'fly') img = Sprites.bats[L.world][Math.floor(e.t / 8) % 2];
       else img = Sprites.shooter[e.dir > 0 ? 0 : 1];
       const ox = e.type === 'fly' ? -2 : -2, oy = e.type === 'fly' ? (Math.floor(e.t / 8) % 2 ? -2 : -1) : -2;
       c.drawImage(img, Math.round(e.x - cam + ox), Math.round(e.y + OY + oy));
@@ -324,11 +366,21 @@ class Play {
     for (const s of this.stars) this.drawStar(c, s.x - cam, s.y + OY, s.rot);
 
     this.drawHero(c, cam);
+    if (this.mode === 'praise' && this.praiseT > 1) { const lx = L.finishX + 46, ly = L.top[L.W - 3] * T - 32 + OY; c.drawImage(Sprites.leader[0][1], Math.round(lx - cam), Math.round(ly), 32, 32); }
 
     for (const q of this.parts) { c.fillStyle = q.col; c.fillRect(Math.round(q.x - cam), Math.round(q.y + OY), q.s, q.s); }
     for (const q of this.texts) Gfx.text(q.s, Math.round(q.x - cam), Math.round(q.y + OY), { color: q.col });
     c.restore();
     this.drawHud(c);
+  }
+
+  drawDialog(c) {
+    const key = this.isBoss ? 'prb' + (this.n / 10 - 1) : 'pr' + (this.n % 8);
+    const lines = Gfx.wrap(t(key), 244);
+    Gfx.box(14, 132, 272, 62, 'rgba(10,6,24,.94)', '#ff3b3b');
+    Gfx.text(t('leader') + ':', 22, 137, { color: '#ff5c5c' });
+    let rem = Math.floor((this.praiseT - 6) / 2.2);
+    lines.forEach((l, i) => { if (rem > 0) Gfx.text(l.slice(0, rem), 22, 150 + i * 11, { color: '#fff' }); rem -= l.length + 1; });
   }
 
   drawSign(c, x, gy, ch) {
@@ -394,13 +446,21 @@ class Play {
     // подсказка / баннер зоны
     if (this.n === 1 && this.t < 420) {
       Gfx.text(t('hint'), VW / 2, 62, { align: 'center', color: '#ffd23f' });
-      Gfx.text(t('c1'), VW / 2, 76, { align: 'center' }); Gfx.text(t('c2'), VW / 2, 86, { align: 'center' }); Gfx.text(t('c3'), VW / 2, 96, { align: 'center' });
+      Gfx.text(t('c1'), VW / 2, 76, { align: 'center' }); Gfx.text(t('c2'), VW / 2, 86, { align: 'center' }); Gfx.text(t('c3'), VW / 2, 96, { align: 'center' }); Gfx.text(t('c5'), VW / 2, 108, { align: 'center', color: '#9ad0ff' });
     }
     if (this.banner.t > 0) {
       const a = Math.min(1, this.banner.t / 20);
-      c.globalAlpha = a; Gfx.box(VW / 2 - 90, 34, 180, 16, 'rgba(0,0,0,.65)', '#ffd23f');
+      const bw = Math.ceil(Gfx.width(this.banner.text) + 16);
+      c.globalAlpha = a; Gfx.box(Math.round(VW / 2 - bw / 2), 34, bw, 16, 'rgba(0,0,0,.65)', '#ffd23f');
       Gfx.text(this.banner.text, VW / 2, 38, { align: 'center', color: '#ffd23f' }); c.globalAlpha = 1;
     }
+    const bs = this.enemies.find(e => e.type === 'boss');
+    if (bs && Math.abs(bs.x - this.p.x) < 300) {
+      Gfx.text(t('leader'), VW / 2, 16, { align: 'center', color: '#ff5c5c' });
+      Gfx.box(80, 26, 140, 7, '#220a14', '#ffffff'); c.fillStyle = '#ff3b3b'; c.fillRect(82, 28, Math.max(0, Math.round(136 * bs.hp / bs.maxHp)), 3);
+    }
+    if (this.warn > 0) { this.warn--; Gfx.text(t('killboss'), VW / 2, 70, { align: 'center', color: '#ff5c5c' }); }
+    if (this.mode === 'praise' && this.praiseT > 6) this.drawDialog(c);
     if (this.mode === 'pause') {
       c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, 0, VW, VH);
       Gfx.text(t('pause'), VW / 2, 60, { size: 16, align: 'center', color: '#ffd23f' });

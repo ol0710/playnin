@@ -92,7 +92,15 @@ const Levels = (() => {
         spots.push(cx); placed++;
       }
     }
-    return { n, W, ROWS, zoneW, tiles, top, enemies, coins, platforms, world: Math.floor((n - 1) / 10), finishX: (W - 5) * T };
+    // вкусности (лечат): на платформах и по одной на зону
+    const foods = [];
+    platforms.forEach((pl, i) => { if (i % 3 === 1 && foods.length < 5) foods.push({ x: (pl.x + (pl.len >> 1)) * T + 3, y: pl.y * T - 14, k: ri(0, 5) }); });
+    for (let zi = 0; zi < 3; zi++) {
+      for (let cx = zi * zoneW + (zoneW >> 1); cx < (zi + 1) * zoneW - 3; cx++) if (flat[cx] && flat[cx + 1] && flat[cx - 1]) { foods.push({ x: cx * T + 3, y: top[cx] * T - 12, k: ri(0, 5) }); break; }
+    }
+    // босс в конце каждого десятого уровня
+    if (n % 10 === 0) enemies.push({ type: 'boss', x: (W - 11) * T, y: top[W - 11] * T });
+    return { n, W, ROWS, zoneW, tiles, top, enemies, coins, foods, platforms, world: Math.floor((n - 1) / 10), finishX: (W - 5) * T };
   }
 
   const zoneAt = (L, cx) => Math.max(0, Math.min(2, Math.floor(cx / L.zoneW)));
