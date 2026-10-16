@@ -1,6 +1,7 @@
 // Звук: чиптюн на WebAudio (никаких аудиофайлов)
 const Sound = (() => {
   let ctx = null, master = null, muted = false, vol = 6, trackName = null, step = 0, nextT = 0;
+  const gainOf = () => (muted ? 0 : Math.pow(vol / 10, 2) * 0.45);
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
   const TRACKS = {
@@ -21,7 +22,7 @@ const Sound = (() => {
     try {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain();
-      master.gain.value = muted ? 0 : vol * 0.0417;
+      master.gain.value = gainOf();
       master.connect(ctx.destination);
     } catch (e) { ctx = null; }
   }
@@ -83,7 +84,7 @@ const Sound = (() => {
     music(name) { if (trackName !== name) { trackName = name; step = 0; nextT = 0; } },
     get muted() { return muted; },
     get vol() { return vol; },
-    setVol(v) { vol = Math.max(0, Math.min(10, v)); if (master) master.gain.value = muted ? 0 : vol * 0.0417; return vol; },
-    toggle() { muted = !muted; if (master) master.gain.value = muted ? 0 : vol * 0.0417; return muted; },
+    setVol(v) { vol = Math.max(0, Math.min(10, v)); if (master) master.gain.value = gainOf(); return vol; },
+    toggle() { muted = !muted; if (master) master.gain.value = gainOf(); return muted; },
   };
 })();

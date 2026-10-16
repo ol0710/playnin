@@ -12,8 +12,8 @@
   try { if (matchMedia('(pointer: coarse)').matches || /[?&]touch=1/.test(location.search)) document.documentElement.classList.add('touch'); } catch (e) {}
 </script>
 <meta name="description" content="Ретро-игра про черепашек-ниндзя прямо в браузере: 8-бит, 40 уровней, экран старого телевизора.">
-<link rel="stylesheet" href="css/font.css">
-<link rel="stylesheet" href="css/tv.css">
+<link rel="stylesheet" href="css/font.css?v=5">
+<link rel="stylesheet" href="css/tv.css?v=5">
 </head>
 <body>
 <div id="stage">
@@ -45,7 +45,7 @@
     <div class="legs"><span></span><span></span></div>
   </div>
 </div>
-<div id="touch">
+<div id="touch" hidden>
   <div class="tl game">
     <button data-k="ArrowLeft" aria-label="Left">&#9664;</button>
     <button data-k="ArrowRight" aria-label="Right">&#9654;</button>
@@ -66,15 +66,15 @@
   </div>
   <button class="sm tb menu" data-tap="back" aria-label="Back">&#10005;</button>
 </div>
-<div id="rotate"><div>&#10227;<br><br>Поверните телефон горизонтально<br><br>Rotate your phone</div></div>
+<div id="rotate" hidden><div>&#10227;<br><br>Поверните телефон горизонтально<br><br>Rotate your phone</div></div>
 <noscript><p style="color:#fff;text-align:center">JavaScript required / Нужен JavaScript</p></noscript>
-<script defer src="js/i18n.js"></script>
-<script defer src="js/audio.js"></script>
-<script defer src="js/input.js"></script>
-<script defer src="js/sprites.js"></script>
-<script defer src="js/levels.js"></script>
-<script defer src="js/game.js"></script>
-<script defer src="js/ui.js"></script>
-<script defer src="js/main.js"></script>
+<script defer src="js/i18n.js?v=5"></script>
+<script defer src="js/audio.js?v=5"></script>
+<script defer src="js/input.js?v=5"></script>
+<script defer src="js/sprites.js?v=5"></script>
+<script defer src="js/levels.js?v=5"></script>
+<script defer src="js/game.js?v=5"></script>
+<script defer src="js/ui.js?v=5"></script>
+<script defer src="js/main.js?v=5"></script>
 </body>
 </html>
